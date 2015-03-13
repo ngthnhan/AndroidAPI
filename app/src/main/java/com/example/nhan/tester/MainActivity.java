@@ -11,6 +11,9 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -87,30 +90,17 @@ public class MainActivity extends ActionBarActivity {
                 URL url = new URL(urlString);
 
                 ObjectMapper mapper = new ObjectMapper();
-                JsonNode jNode = mapper.readTree(url);
+                mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+                LocationResponse response = mapper.readValue(url, LocationResponse.class);
 
-                String status = jNode.get("status").asText();
-                System.out.println(jNode.get("status").asText());
-                switch (status) {
+                switch (response.getStatus()) {
                     case "OK":
-                        JsonNode data = jNode.get("results");
-                        Iterator<JsonNode> it = data.iterator();
+                        LocationData location = response.getResults()[0]; // Take first one
                         // Only care about the first result
-                        if(it.hasNext()) {
-                            JsonNode currentResult = it.next();
-                            LocationData location = new LocationData();
-
-                            location.setAddress(currentResult.get("formatted_address").asText());;
-
-                            JsonNode geo = currentResult.get("geometry").get("location");
-                            location.setLatitude(geo.get("lat").asText());
-                            location.setLongitude(geo.get("lng").asText());
-                            resultToDisplay = location.displayResult();
-                        }
-
+                        resultToDisplay = location.displayResult();
                         break;
                     default:
-                        System.out.println("Status is not okay" + status);
+                        System.out.println("Status is not okay" + response.getStatus());
                 }
             } catch (MalformedURLException e) {
                 e.printStackTrace();
@@ -125,49 +115,6 @@ public class MainActivity extends ActionBarActivity {
         protected void onPostExecute(String result) {
             TextView resultView = (TextView) findViewById(R.id.resultStr);
             resultView.setText(result);
-        }
-    }
-
-    private class LocationData {
-        private String latitude;
-        private String longitude;
-        private String address;
-        private String result;
-
-        public LocationData(){
-            this.result = "";
-        }
-
-        public String getLatitude() {
-            return latitude;
-        }
-
-        public String getLongitude() {
-            return longitude;
-        }
-
-        public String getAddress() {
-            return address;
-        }
-
-        public void setLatitude(String latitude) {
-            this.latitude = latitude;
-        }
-
-        public void setLongitude(String longitude) {
-            this.longitude = longitude;
-        }
-
-        public void setAddress(String address) {
-            this.address = address;
-        }
-
-        public String displayResult(){
-            this.result += "Formatted Address: " + this.address;
-            this.result += "\n";
-            this.result += "Lat Long: " + this.latitude + " " + this.longitude ;
-
-            return this.result;
         }
     }
 }
