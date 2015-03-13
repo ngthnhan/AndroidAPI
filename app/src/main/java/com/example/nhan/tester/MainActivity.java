@@ -98,19 +98,14 @@ public class MainActivity extends ActionBarActivity {
                         // Only care about the first result
                         if(it.hasNext()) {
                             JsonNode currentResult = it.next();
-                            String formattedAddress = currentResult.get("formatted_address").asText();
+                            LocationData location = new LocationData();
 
-                            JsonNode location = currentResult.get("geometry").get("location");
-                            String latLong = location.get("lat").asText() + " " +
-                                             location.get("lng").asText();
+                            location.setAddress(currentResult.get("formatted_address").asText());;
 
-
-                            resultToDisplay += "Formatted Address: " + formattedAddress;
-                            resultToDisplay += "\n";
-                            resultToDisplay += "Lat Long: " + latLong;
-
-                            System.out.println("Formatted Address: " + formattedAddress);
-                            System.out.println("Lat Long: " + latLong);
+                            JsonNode geo = currentResult.get("geometry").get("location");
+                            location.setLatitude(geo.get("lat").asText());
+                            location.setLongitude(geo.get("lng").asText());
+                            resultToDisplay = location.displayResult();
                         }
 
                         break;
@@ -130,6 +125,49 @@ public class MainActivity extends ActionBarActivity {
         protected void onPostExecute(String result) {
             TextView resultView = (TextView) findViewById(R.id.resultStr);
             resultView.setText(result);
+        }
+    }
+
+    private class LocationData {
+        private String latitude;
+        private String longitude;
+        private String address;
+        private String result;
+
+        public LocationData(){
+            this.result = "";
+        }
+
+        public String getLatitude() {
+            return latitude;
+        }
+
+        public String getLongitude() {
+            return longitude;
+        }
+
+        public String getAddress() {
+            return address;
+        }
+
+        public void setLatitude(String latitude) {
+            this.latitude = latitude;
+        }
+
+        public void setLongitude(String longitude) {
+            this.longitude = longitude;
+        }
+
+        public void setAddress(String address) {
+            this.address = address;
+        }
+
+        public String displayResult(){
+            this.result += "Formatted Address: " + this.address;
+            this.result += "\n";
+            this.result += "Lat Long: " + this.latitude + " " + this.longitude ;
+
+            return this.result;
         }
     }
 }
